@@ -1,14 +1,46 @@
 local M = {}
 
--- Define the content for the new window
-local content = {
-	"Hello, this is a floating window!",
-	"You can add any content you want here.",
-	"This is just a simple example.",
+local config = {
+	window = nil,
+	window_id = nil,
 }
 
+-- Define the content for the new window
+local content = {
+	"Hello, welcome to Typing McQueen!",
+}
+
+-- Function to set up autocommands to start/stop logging in insert mode
+local function setup_autocommands()
+	vim.api.nvim_exec(
+		[[
+    augroup MyPluginKeyLogger
+      autocmd!
+      autocmd InsertEnter * lua require('nvim_typing_mcqueen').start_logging_keys()
+      autocmd InsertLeave * lua require('nvim_typing_mcqueen').stop_logging_keys()
+    augroup END
+  ]],
+		false
+	)
+end
+
+-- Function to log key presses
+local function start_logging_keys()
+	local current_window_id = vim.api.nvim_get_current_win()
+	if config.window_id == current_window_id then
+		vim.on_key(function(key)
+			print(string.format("Key pressed: %s in insert mode", key))
+		end, M)
+	end
+end
+
+-- Function to stop logging key presses
+local function stop_logging_keys()
+	vim.on_key(nil, M)
+end
+
 -- Creates and returns a new floating window
-function M.openFloat(window_content)
+local function new_float_window(window_content)
 	-- Create a new buffer
 	local buf = vim.api.nvim_create_buf(false, true)
 
@@ -52,11 +84,16 @@ function M.openFloat(window_content)
 		border = border_opts,
 	}
 
-	-- Open the floating window
-	local window = vim.api.nvim_open_win(buf, true, opts)
+	-- Return new floating window
+	return vim.api.nvim_open_win(buf, true, opts)
+end
+
+function M.openNewSession(session_content)
+	config.window = new_float_window(session_content)
+	config.window_id = vim.api.nvim_get_current_win()
 
 	-- Set the window highlight for Normal and FloatBorder
-	vim.api.nvim_win_set_option(window, "winhl", "Normal:FloatingNormal,FloatBorder:FloatingBorder")
+	vim.api.nvim_win_set_option(config.window, "winhl", "Normal:FloatingNormal,FloatBorder:FloatingBorder")
 
 	-- Copy highlight groups for FloatingNormal and FloatingBorder from the current theme
 	local function get_hl(name)
@@ -80,8 +117,12 @@ function M.openFloat(window_content)
 	-- Set the highlight groups for the floating window
 	vim.api.nvim_set_hl(0, "FloatingNormal", normal_hl)
 	vim.api.nvim_set_hl(0, "FloatingBorder", border_hl)
+
+	vim.api.nvim_input("i")
+
+	setup_autocommands()
 end
 
-M.openFloatingWindow(content)
+M.openNewSession(content)
 
 return M
