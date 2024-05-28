@@ -1,7 +1,5 @@
 # nvim-typing-mcqueen
 
-              { "Notes",    "/Users/wxllxm/Personal/Notes" },
-
 MonkeyType style nvim plugin
 
 Notes:
@@ -19,3 +17,17 @@ Todo:
 - Add the text that needs to be typed out - DONE
 - Track keystrokes
 - Make text red or green
+
+NOTE:
+
+- I think we should loop through all characters of the buffer.
+- for each character we can check for certain things.
+- move forward and back in the buffer based on key presses (space = forward, backspace = back)
+- check if the key presses match the current character, if so.. hightlight it.
+- if we go back, unhighlight the current character.
+
+
+recursive function:
+- keep going until the end of the array of words to type.
+- We can go forward and back.
+- can compare.
