@@ -1,13 +1,12 @@
--- TODO
--- lool at splitting the new window function into buffer & window
-
 -- 'M' is a convention used for plugins.
 local M = {}
 
 M.namespace = vim.api.nvim_create_namespace("nvim-typing-mcqueen")
 
-local function compare_char(key_char)
-	print("hello" .. key_char)
+local function get_char_at_cursor()
+	local row, col = unpack(vim.api.nvim_win_get_cursor(0))
+	local line = vim.api.nvim_get_current_line()
+	return line:sub(col + 1, col + 1)
 end
 
 --@returns: a new window
@@ -19,14 +18,21 @@ local function newWindow()
 
 	-- create new empty buffer
 	local buf = vim.api.nvim_create_buf(false, true)
-	print(buf)
-	vim.api.nvim_buf_set_keymap(
-		buf,
-		"i",
-		"a",
-		":lua require('.aadslkajsdfklj/init.lua').compare_char('a')<CR>",
-		{ noremap = true, silent = false }
-	)
+
+	vim.api.nvim_command("set cmdheight=3")
+
+	-- capture key presses
+	vim.api.nvim_buf_attach(buf, false, {
+		on_lines = function(_, _, _, _, _, _)
+			vim.on_key(function(key)
+				local char_at_cursor = get_char_at_cursor()
+				print(string.format("Key pressed: %s before char: %s", key, char_at_cursor))
+				if key == char_at_cursor then
+					print("the same, this is where we would want to highlight the char and move on.")
+				end
+			end)
+		end,
+	})
 
 	-- add content to buffer
 	vim.api.nvim_buf_set_lines(buf, 0, -1, false, { sample_text, sample_text1, sample_text2 })
@@ -73,10 +79,6 @@ local function newWindow()
 		end
 	end
 end
-
--- TODOs
--- create local buffer keymaps.
--- create a function to take pressed keymap and compare to current char in buffer.
 
 vim.api.nvim_create_user_command("TMC", newWindow, {})
 
